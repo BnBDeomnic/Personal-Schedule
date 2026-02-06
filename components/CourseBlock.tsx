@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { CourseBlock as CourseBlockType } from "@/lib/types";
 
 interface CourseBlockProps {
@@ -5,7 +6,7 @@ interface CourseBlockProps {
   scale: number;
 }
 
-export function CourseBlock({ block, scale }: CourseBlockProps) {
+function CourseBlockComponent({ block, scale }: CourseBlockProps) {
   const { course, top, left, width, height } = block;
 
   const bgColor = course.color;
@@ -103,3 +104,5 @@ export function CourseBlock({ block, scale }: CourseBlockProps) {
     </div>
   );
 }
+
+export const CourseBlock = memo(CourseBlockComponent);

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Schedule } from "@/lib/types";
 import { calculateLayout, generateTimeLabels, getLayoutConfig } from "@/lib/layout-engine";
 import { CourseBlock } from "./CourseBlock";
@@ -12,7 +13,7 @@ interface ScheduleCanvasProps {
 const DAYS_LABEL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const DAYS_SHORT = ["MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
-export function ScheduleCanvas({ schedule, scale = 0.25 }: ScheduleCanvasProps) {
+function ScheduleCanvasComponent({ schedule, scale = 0.25 }: ScheduleCanvasProps) {
   const blocks = calculateLayout(schedule.courses);
   const timeLabels = generateTimeLabels(schedule.courses);
   const config = getLayoutConfig(schedule.courses);
@@ -140,3 +141,5 @@ export function ScheduleCanvas({ schedule, scale = 0.25 }: ScheduleCanvasProps) 
     </div>
   );
 }
+
+export const ScheduleCanvas = memo(ScheduleCanvasComponent);

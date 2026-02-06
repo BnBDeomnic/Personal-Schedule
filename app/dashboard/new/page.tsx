@@ -30,7 +30,7 @@ export default function NewSchedulePage() {
   const [semester, setSemester] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<Omit<Course, "id" | "color">>({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<Omit<Course, "id" | "color">>({
     resolver: zodResolver(courseSchema.omit({ id: true, color: true })),
     defaultValues: {
       name: "",
@@ -43,15 +43,12 @@ export default function NewSchedulePage() {
   });
 
   const onAddCourse = (data: Omit<Course, "id" | "color">) => {
-    console.log("Form data:", data); // Debug log
-    
     const newCourse: Course = {
       ...data,
       id: Date.now().toString(),
       color: COLORS[courses.length % COLORS.length],
     };
     
-    console.log("New course:", newCourse); // Debug log
     setCourses([...courses, newCourse]);
     toast.success(`Added: ${data.name}`);
     reset({
@@ -89,8 +86,6 @@ export default function NewSchedulePage() {
     setSaving(true);
 
     try {
-      console.log("Saving schedule for user:", user.id); // Debug log
-      
       // Create schedule
       const { data: schedule, error: scheduleError } = await supabase
         .from('schedules')
@@ -102,12 +97,7 @@ export default function NewSchedulePage() {
         .select()
         .single();
 
-      if (scheduleError) {
-        console.error("Schedule error:", scheduleError); // Debug log
-        throw scheduleError;
-      }
-
-      console.log("Schedule created:", schedule); // Debug log
+      if (scheduleError) throw scheduleError;
 
       // Insert courses
       const coursesData = courses.map(course => ({
@@ -121,31 +111,25 @@ export default function NewSchedulePage() {
         color: course.color,
       }));
 
-      console.log("Inserting courses:", coursesData); // Debug log
-
       const { error: coursesError } = await supabase
         .from('courses')
         .insert(coursesData);
 
-      if (coursesError) {
-        console.error("Courses error:", coursesError); // Debug log
-        throw coursesError;
-      }
+      if (coursesError) throw coursesError;
 
       toast.success("Schedule created successfully!");
       router.push(`/preview/${schedule.id}`);
     } catch (error: any) {
-      console.error("Save error:", error); // Debug log
       toast.error(error.message || "Failed to save schedule");
       setSaving(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Create New Schedule</h1>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Create New Schedule</h1>
           <Button variant="outline" onClick={() => router.push("/dashboard")}>
             ← Back
           </Button>
@@ -156,7 +140,7 @@ export default function NewSchedulePage() {
           <CardHeader>
             <CardTitle>Student Information</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="studentName">Student Name</Label>
               <Input
@@ -195,7 +179,7 @@ export default function NewSchedulePage() {
                 {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="room">Room</Label>
                   <Input
@@ -234,7 +218,7 @@ export default function NewSchedulePage() {
                 {errors.day && <p className="text-sm text-red-500">{errors.day.message}</p>}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="startTime">Start Time</Label>
                   <Input

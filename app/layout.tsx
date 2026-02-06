@@ -18,6 +18,12 @@ export const metadata: Metadata = {
   description: "Export high-quality images and PDFs of your academic week",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

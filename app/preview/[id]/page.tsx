@@ -65,9 +65,11 @@ export default function PreviewPage() {
   // Update preview scale on window resize
   useEffect(() => {
     const updateScale = () => {
-      const availableWidth = Math.min(window.innerWidth - 100, 1400);
+      // Mobile-first responsive scaling
+      const padding = window.innerWidth < 640 ? 32 : 100; // Less padding on mobile
+      const maxWidth = window.innerWidth < 640 ? window.innerWidth - padding : Math.min(window.innerWidth - padding, 1400);
       const canvasWidth = 2480;
-      const scale = availableWidth / canvasWidth;
+      const scale = maxWidth / canvasWidth;
       setPreviewScale(scale);
     };
 
@@ -95,7 +97,6 @@ export default function PreviewPage() {
         toast.success("PDF exported successfully!");
       }
     } catch (error) {
-      console.error("Export failed:", error);
       toast.error("Export failed. Please try again.");
     } finally {
       setIsExporting(false);
@@ -145,15 +146,15 @@ export default function PreviewPage() {
   const canvasDimensions = getCanvasDimensions();
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-900 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-white">Print Preview</h1>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={() => router.push(`/dashboard/${scheduleId}/edit`)}>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Print Preview</h1>
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <Button variant="outline" onClick={() => router.push(`/dashboard/${scheduleId}/edit`)} className="w-full sm:w-auto">
               ✏️ Edit Schedule
             </Button>
-            <Button variant="outline" onClick={() => router.push("/dashboard")}>
+            <Button variant="outline" onClick={() => router.push("/dashboard")} className="w-full sm:w-auto">
               ← Back to Dashboard
             </Button>
           </div>
@@ -165,50 +166,51 @@ export default function PreviewPage() {
           style={{
             width: canvasDimensions.width * previewScale,
             height: canvasDimensions.height * previewScale,
+            maxWidth: '100%',
           }}
         >
           <ScheduleCanvas schedule={schedule} scale={previewScale} />
         </div>
 
         {/* Export Options */}
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Export Options</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-gray-800 rounded-lg p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Export Options</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Button
               onClick={() => handleExport("pdf")}
               disabled={isExporting}
-              className="h-20 text-lg"
+              className="h-auto py-4 text-base sm:text-lg"
               size="lg"
             >
               {isExporting ? (
                 "Exporting..."
               ) : (
-                <>
-                  <span className="text-3xl mr-3">📄</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl sm:text-3xl">📄</span>
                   <div className="text-left">
                     <div className="font-bold">Export as PDF</div>
                     <div className="text-xs opacity-80">A4 Landscape, Print-ready</div>
                   </div>
-                </>
+                </div>
               )}
             </Button>
             <Button
               onClick={() => handleExport("png")}
               disabled={isExporting}
               variant="secondary"
-              className="h-20 text-lg"
+              className="h-auto py-4 text-base sm:text-lg"
               size="lg"
             >
               {isExporting ? (
                 "Exporting..."
               ) : (
-                <>
-                  <span className="text-3xl mr-3">🖼️</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl sm:text-3xl">🖼️</span>
                   <div className="text-left">
                     <div className="font-bold">Export as Image</div>
                     <div className="text-xs opacity-80">PNG, High Resolution (3x)</div>
                   </div>
-                </>
+                </div>
               )}
             </Button>
           </div>

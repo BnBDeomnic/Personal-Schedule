@@ -55,3 +55,6 @@ Thumbs.db
 # Supabase
 .supabase/
 
+# Documentation (generated)
+docs/*.md
+!docs/README.md

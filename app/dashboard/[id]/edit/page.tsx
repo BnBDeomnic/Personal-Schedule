@@ -217,7 +217,6 @@ export default function EditSchedulePage() {
       toast.success("Schedule updated successfully!");
       router.push(`/preview/${scheduleId}`);
     } catch (error) {
-      console.error("Save error:", error);
       toast.error("Failed to save schedule");
     } finally {
       setSaving(false);
@@ -233,11 +232,11 @@ export default function EditSchedulePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 sm:p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Edit Schedule</h1>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Edit Schedule</h1>
           <Button variant="outline" onClick={() => router.push("/dashboard")}>
             ← Back to Dashboard
           </Button>
