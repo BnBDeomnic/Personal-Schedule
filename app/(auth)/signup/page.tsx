@@ -26,19 +26,15 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-      },
     });
 
     if (error) {
       toast.error(error.message);
       setLoading(false);
     } else {
-      toast.success("Check your email to confirm your account!");
-      setEmail("");
-      setPassword("");
-      setLoading(false);
+      toast.success("Account created successfully! Please login.");
+      // Redirect to login page
+      router.push("/login");
     }
   };
 
