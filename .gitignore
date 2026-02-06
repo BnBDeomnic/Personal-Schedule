@@ -58,3 +58,4 @@ Thumbs.db
 # Documentation (generated)
 docs/*.md
 !docs/README.md
+docs
