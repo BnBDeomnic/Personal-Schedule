@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ScheduleCanvas } from "@/components/ScheduleCanvas";
-import { exportAsPNG, exportAsJPEG, exportAsPDF } from "@/lib/export";
+import { exportAsPNG, exportAsPDF } from "@/lib/export";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -17,7 +17,7 @@ export default function PreviewPage() {
   const [schedule, setSchedule] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [previewScale, setPreviewScale] = useState(0.25);
   const supabase = createClient();
 
   useEffect(() => {
@@ -62,16 +62,38 @@ export default function PreviewPage() {
     fetchSchedule();
   }, [scheduleId, router, supabase]);
 
-  const handleExport = async (type: "png" | "jpeg" | "pdf") => {
+  // Update preview scale on window resize
+  useEffect(() => {
+    const updateScale = () => {
+      const availableWidth = Math.min(window.innerWidth - 100, 1400);
+      const canvasWidth = 2480;
+      const scale = availableWidth / canvasWidth;
+      setPreviewScale(scale);
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, []);
+
+  const handleExport = async (type: "png" | "pdf") => {
     const element = document.getElementById("schedule-canvas");
-    if (!element) return;
+    if (!element) {
+      toast.error("Schedule canvas not found");
+      return;
+    }
 
     setIsExporting(true);
     try {
-      if (type === "png") await exportAsPNG(element);
-      else if (type === "jpeg") await exportAsJPEG(element);
-      else if (type === "pdf") await exportAsPDF(element);
-      toast.success("Export successful!");
+      const filename = `${schedule.studentName}_${schedule.semester}`.replace(/\s+/g, '_');
+      
+      if (type === "png") {
+        await exportAsPNG(element, `${filename}.png`);
+        toast.success("PNG exported successfully!");
+      } else if (type === "pdf") {
+        await exportAsPDF(element, `${filename}.pdf`);
+        toast.success("PDF exported successfully!");
+      }
     } catch (error) {
       console.error("Export failed:", error);
       toast.error("Export failed. Please try again.");
@@ -93,11 +115,11 @@ export default function PreviewPage() {
   // Calculate exact canvas dimensions
   const getCanvasDimensions = () => {
     if (!schedule || schedule.courses.length === 0) {
-      return { width: 3508, height: 2480 };
+      return { width: 2480, height: 1860 }; // Updated default
     }
 
     const config = {
-      canvasWidth: 3508,
+      canvasWidth: 2480, // Updated from 3508
       headerHeight: 240,
       dayHeaderHeight: 70,
       footerHeight: 80,
@@ -122,108 +144,82 @@ export default function PreviewPage() {
 
   const canvasDimensions = getCanvasDimensions();
 
-  // Calculate scale to fit screen
-  const calculateScale = () => {
-    if (typeof window === 'undefined') return 0.25;
-    
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-    
-    const scaleX = screenWidth / canvasDimensions.width;
-    const scaleY = screenHeight / canvasDimensions.height;
-    
-    return Math.min(scaleX, scaleY, 1); // Max 1 (100%)
-  };
-
   return (
-    <>
-      {/* Full Screen Mode */}
-      {isFullScreen && (
-        <div className="fixed inset-0 z-50 bg-white flex items-center justify-center overflow-hidden">
-          {/* Close Button */}
-          <button
-            onClick={() => setIsFullScreen(false)}
-            className="absolute top-4 right-4 z-50 bg-black/80 hover:bg-black text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg"
-          >
-            ✕ Close Full Screen
-          </button>
-          
-          {/* Canvas - Full Screen */}
-          <div className="w-full h-full flex items-center justify-center">
-            <ScheduleCanvas schedule={schedule} scale={calculateScale()} />
+    <div className="min-h-screen bg-gray-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-white">Print Preview</h1>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => router.push(`/dashboard/${scheduleId}/edit`)}>
+              ✏️ Edit Schedule
+            </Button>
+            <Button variant="outline" onClick={() => router.push("/dashboard")}>
+              ← Back to Dashboard
+            </Button>
           </div>
         </div>
-      )}
 
-      {/* Normal View */}
-      <div className="min-h-screen bg-gray-900 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-white">Print Preview</h1>
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => router.push(`/dashboard/${scheduleId}/edit`)}>
-                ✏️ Edit Schedule
-              </Button>
-              <Button variant="outline" onClick={() => router.push("/dashboard")}>
-                ← Back to Dashboard
-              </Button>
-            </div>
-          </div>
+        {/* Preview - Full Width */}
+        <div 
+          className="bg-white rounded-lg shadow-2xl overflow-hidden mb-6 mx-auto"
+          style={{
+            width: canvasDimensions.width * previewScale,
+            height: canvasDimensions.height * previewScale,
+          }}
+        >
+          <ScheduleCanvas schedule={schedule} scale={previewScale} />
+        </div>
 
-          {/* Preview - Exact Canvas Size (No White Space) */}
-          <div 
-            className="bg-white rounded-lg shadow-2xl overflow-hidden"
-            style={{
-              width: canvasDimensions.width * 0.25,
-              height: canvasDimensions.height * 0.25,
-            }}
-          >
-            <ScheduleCanvas schedule={schedule} scale={0.25} />
-          </div>
-
-          {/* Actions */}
-          <div className="bg-gray-800 rounded-lg p-6 space-y-4">
-            {/* Full Screen Button */}
-            <div>
-              <Button
-                onClick={() => setIsFullScreen(true)}
-                className="w-full"
-                size="lg"
-                variant="default"
-              >
-                🖥️ View Full Screen (No White Space)
-              </Button>
-            </div>
-
-            {/* Export Options */}
-            <div>
-              <h2 className="text-xl font-semibold text-white mb-4">Export Options</h2>
-              <div className="flex gap-4">
-                <Button
-                  onClick={() => handleExport("pdf")}
-                  disabled={isExporting}
-                  className="flex-1"
-                  size="lg"
-                >
-                  📄 Export PDF
-                </Button>
-                <Button
-                  onClick={() => handleExport("png")}
-                  disabled={isExporting}
-                  variant="secondary"
-                  className="flex-1"
-                  size="lg"
-                >
-                  🖼️ Export as Image (PNG)
-                </Button>
-              </div>
-              {isExporting && (
-                <p className="text-center text-gray-400 mt-4">Exporting... Please wait.</p>
+        {/* Export Options */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">Export Options</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button
+              onClick={() => handleExport("pdf")}
+              disabled={isExporting}
+              className="h-20 text-lg"
+              size="lg"
+            >
+              {isExporting ? (
+                "Exporting..."
+              ) : (
+                <>
+                  <span className="text-3xl mr-3">📄</span>
+                  <div className="text-left">
+                    <div className="font-bold">Export as PDF</div>
+                    <div className="text-xs opacity-80">A4 Landscape, Print-ready</div>
+                  </div>
+                </>
               )}
-            </div>
+            </Button>
+            <Button
+              onClick={() => handleExport("png")}
+              disabled={isExporting}
+              variant="secondary"
+              className="h-20 text-lg"
+              size="lg"
+            >
+              {isExporting ? (
+                "Exporting..."
+              ) : (
+                <>
+                  <span className="text-3xl mr-3">🖼️</span>
+                  <div className="text-left">
+                    <div className="font-bold">Export as Image</div>
+                    <div className="text-xs opacity-80">PNG, High Resolution (3x)</div>
+                  </div>
+                </>
+              )}
+            </Button>
           </div>
+          {isExporting && (
+            <div className="mt-4 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+              <p className="text-gray-400 mt-2">Processing... Please wait</p>
+            </div>
+          )}
         </div>
       </div>
-    </>
+    </div>
   );
 }

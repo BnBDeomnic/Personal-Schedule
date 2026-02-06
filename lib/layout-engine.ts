@@ -35,17 +35,21 @@ export function getLayoutConfig(courses: Course[]) {
   const footerHeight = 80;
   const dayHeaderHeight = 70;
   
+  // Canvas width optimized for 3:4 export ratio
+  // Using 2480px width (instead of 3508) for better proportions
+  const canvasWidth = 2480; // Optimized for 3:4 ratio when exported
+  
   return {
     // Canvas size - dynamic based on content
-    canvasWidth: 3508,
+    canvasWidth: canvasWidth,
     canvasHeight: headerHeight + dayHeaderHeight + contentHeight + footerHeight,
     
     // Grid config
     headerHeight: headerHeight,
     dayHeaderHeight: dayHeaderHeight,
     footerHeight: footerHeight,
-    timeColumnWidth: 160,
-    dayColumnWidth: 545,
+    timeColumnWidth: 120, // Reduced from 160
+    dayColumnWidth: 385,  // Reduced from 545 (2480 - 120) / 6 ≈ 393, use 385 for spacing
     hourHeight: hourHeight,
     
     // Time range (dynamic)
